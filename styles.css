@@ -1,5 +1,93 @@
 body {
-    background-color: black;
-    color: green;
-    font-family: Arial, sans-serif;
+    background-color: #0f0f0f; /* Dark background */
+    font-family: 'Courier New', Courier, monospace; /* Monospaced font for a code-like appearance */
+    color: #0f0; /* Bright green text, typical of cyberpunk themes */
+    padding: 0 20px 0 25px;
+}
+
+/* Class for glowing text effect */
+.glow {
+    text-shadow: 
+        0 0 5px #0f0, /* Small green glow */
+        0 0 10px #0f0, /* Medium green glow */
+        0 0 20px #0f0, /* Large green glow */
+        0 0 40px #0f0, /* Extra large green glow */
+        0 0 80px #0f0; /* Ultra large green glow */
+}
+
+/* Optional: Animation for a flickering effect */
+@keyframes flicker {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.flicker {
+    animation: flicker 1s infinite alternate;
+}
+
+/* Basic styling for the container */
+#login-container {
+    position: relative;
+    width: 300px;
+    padding: 20px;
+    margin: 0;
+    text-align: right;
+    background-color: #0f0f0f;
+    color: #0f0;
+}
+
+/* Style for input fields */
+#login-form {
+    display: flex; /* Makes the form a block element, allowing alignment */
+}
+
+#login-form input {
+    width: 45%;
+    padding: 10px;
+    margin: 5px 2%;
+    border: 1px solid #333;
+    background-color: #000;
+    color: #0f0;
+    border-radius: 5px;
+    display: flex; /* Display fields in-line */
+}
+
+/* Glow effect for the button */
+#confirm-button {
+    padding: 10px 20px;
+    border: 1px solid #0f0;
+    background-color: #000;
+    color: #0f0;
+    text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+#confirm-button:hover {
+    background-color: #012;
+    box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+}
+
+/* Monitor shutdown effect */
+@keyframes monitor-shutdown {
+    0%, 20% {
+        /* Start with full form */
+        opacity: 1;
+        transform: scaleX(1) scaleY(1);
+    }
+    80% {
+        /* Collapse to a horizontal line */
+        opacity: 1;
+        transform: scaleX(1) scaleY(0);
+    }
+    100% {
+        /* Fade to a single point */
+        opacity: 0;
+        transform: scaleX(0) scaleY(0);
+    }
+}
+
+.shutdown {
+    animation: monitor-shutdown 1s forwards;
 }
