@@ -54,40 +54,60 @@ body {
 }
 
 /* Glow effect for the button */
-#confirm-button {
-    padding: 10px 20px;
-    border: 1px solid #0f0;
-    background-color: #000;
-    color: #0f0;
-    text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
-    cursor: pointer;
-    transition: background-color 0.3s, box-shadow 0.3s;
-}
+    #confirm-button {
+        padding: 10px 20px;
+        border: 1px solid #0f0;
+        background-color: #000;
+        color: #0f0;
+        text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+        cursor: pointer;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
 
-#confirm-button:hover {
-    background-color: #012;
-    box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
-}
+    #confirm-button:hover {
+        background-color: #012;
+        box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+    }
 
 /* Monitor shutdown effect */
-@keyframes monitor-shutdown {
-    0%, 20% {
-        /* Start with full form */
-        opacity: 1;
-        transform: scaleX(1) scaleY(1);
+    @keyframes monitor-shutdown {
+        0%, 20% {
+            /* Start with full form */
+            opacity: 1;
+            transform: scaleX(1) scaleY(1);
+        }
+        80% {
+            /* Collapse to a horizontal line */
+            opacity: 1;
+            transform: scaleX(1) scaleY(0);
+        }
+        100% {
+            /* Fade to a single point */
+            opacity: 0;
+            transform: scaleX(0) scaleY(0);
+        }
     }
-    80% {
-        /* Collapse to a horizontal line */
-        opacity: 1;
-        transform: scaleX(1) scaleY(0);
-    }
-    100% {
-        /* Fade to a single point */
-        opacity: 0;
-        transform: scaleX(0) scaleY(0);
-    }
-}
 
-.shutdown {
-    animation: monitor-shutdown 1s forwards;
-}
+    .shutdown {
+        animation: monitor-shutdown 1s forwards;
+    }
+
+
+/* Download dots effect */
+    @keyframes blink {
+        0%, 100% { content: ''; }
+        20% { content: '.'; }
+        40% { content: '..'; }
+        60% { content: '...'; }
+    }
+
+    .loading .dots {
+        display: inline-block;
+        vertical-align: top; /* Ensures alignment with the text */
+    }
+
+    .loading .dots::after {
+        content: '';
+        display: inline-block;
+        animation: blink 2s infinite;
+    }
