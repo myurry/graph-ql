@@ -5,6 +5,13 @@ body {
     padding: 0 20px 0 25px;
 }
 
+.graph-container {
+    height: 600px;
+    width: 680px;
+    padding: 25px;
+
+}
+
 /* Class for glowing text effect */
 .glow {
     text-shadow: 
