@@ -115,6 +115,14 @@ function fill_graph(data) {
     path.style.fill = 'none';
     svg.appendChild(path);
 
+    const pathLength = path.getTotalLength();
+    path.style.strokeDasharray = pathLength;
+    path.style.strokeDashoffset = pathLength;
+
+    // Force reflow to ensure the animation runs when the class is added
+    path.getBoundingClientRect();
+    path.style.animation = 'draw-line 5s ease forwards'; 
+
     let totalXP = transactions[transactions.length - 1].y; // Assuming the last transaction contains the total sum
     // Update the text element for total XP
     document.querySelector('#graph .total-xp').textContent = `Total XP: ${totalXP}`;
