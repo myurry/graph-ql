@@ -18,31 +18,44 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     document.getElementById('login-container').classList.add('shutdown');
 
     setTimeout(function() {
-        // Optional: Redirect or perform actions after the animation ends
-        // window.location.href = 'homepage.html';
+        
         if (typeof jwtToken == 'string' && jwtToken.split('.').length == 3){
+            // First, remove the loading element
             document.getElementsByClassName("loading")[0].remove();
 
-            /* Attempt to get data for svg graphs */
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${jwtToken}`
-                },
-                body: JSON.stringify({
-                    query: `
-                    {
-                        transaction {
-                          amount
-                          createdAt
-                        }
-                    }`
-                })
-            })
-            .then(response => response.json())
-            .then(data => fill_graph(data.data))
-            .catch(error => console.error('Error:', error));
+        // Then, call `get_id()` and wait for it to resolve
+            get_id().then(userId => {
+                if (userId) {
+                    // Once we have the user ID, we can make the fetch request for transactions
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${jwtToken}`
+                        },
+                        body: JSON.stringify({
+                            query: `
+                            {
+                                transaction (where: {userId: {_eq: ${userId}}}) {
+                                amount
+                                createdAt
+                                }
+                            }`
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(fill_xp_graph(data.data));
+                    })
+                    .catch(error => console.error('Error:', error));
+                } else {
+                    console.error('Failed to get user ID');
+                }
+            }).catch(error => {
+                console.error('Error getting user ID:', error);
+            });
+
+            drawAuditRatioGraph();
 
         }else{
             const element = document.getElementsByClassName("loading")[0]
@@ -77,7 +90,110 @@ function update_token(credentials) {
     .catch(error => console.error('Error:', error));
 }
 
-function fill_graph(data) {
+async function get_id() {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify({
+                query: `
+                {
+                    user {
+                      id
+                    }
+                }`
+            })
+        });
+        const data = await response.json();
+        // Assuming the data contains the user object and that it's an array
+        if (data && data.data && data.data.user && data.data.user.length > 0) {
+            const userId = data.data.user[0].id; // Getting the first user's ID
+            return userId; // Return the ID
+        } else {
+            console.error('No user ID found');
+            return null; // Return null or throw an error as appropriate
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return null; // Return null or throw an error as appropriate
+    }
+}
+
+async function get_audit_ratio() {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwtToken}`
+            },
+            body: JSON.stringify({
+                query: `
+                {
+                    transaction {
+                      user {
+                        auditRatio
+                      }
+                    }
+                  }`
+            })
+        });
+        const data = await response.json();
+        // Assuming the data contains the user object and that it's an array
+        if (data && data.data && data.data.user && data.data.user.length > 0) {
+            const auditRatio = data.data.transaction[0].user.auditRatio; // Getting the first user's auditRatio
+            return auditRatio; // Return the ID
+        } else {
+            console.error('No user ID found');
+            return null; // Return null or throw an error as appropriate
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return null; // Return null or throw an error as appropriate
+    }
+}
+
+async function drawAuditRatioGraph() {
+    const auditRatio = await get_audit_ratio(); // Get the audit ratio
+    const maxHeight = 400; // Maximum height for the square representing 1
+    let firstSquareHeight = maxHeight; // Height for the square representing 1
+
+    // If the audit ratio is larger than 1, scale down the first square
+    if (auditRatio > 1) {
+        firstSquareHeight = maxHeight / auditRatio;
+    }
+
+    const secondSquareHeight = auditRatio * maxHeight; // Height for the audit_ratio square
+
+    // Assume gap is the space you want between squares
+    const gap = 20;
+
+    // Recalculate the x positions to include the gap
+    const firstSquareX = 50; // Starting x for the first square
+    const firstSquareWidth = 100; // The width of the first square
+
+    const secondSquareX = firstSquareX + firstSquareWidth + gap; // Starting x for the second square
+
+    const squareOnePath = `M ${firstSquareX} 400 H ${firstSquareX + firstSquareWidth} V ${400 - firstSquareHeight} H ${firstSquareX} Z`;
+    const squareTwoPath = `M ${secondSquareX} 400 H ${secondSquareX + firstSquareWidth} V ${400 - secondSquareHeight} H ${secondSquareX} Z`;
+    
+    // Add these paths to your SVG
+    const svg = document.getElementById('graph2');
+    const squareOne = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    squareOne.setAttribute('d', squareOnePath);
+    squareOne.style.fill = 'red'; // Choose your color
+    svg.appendChild(squareOne);
+
+    const squareTwo = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    squareTwo.setAttribute('d', squareTwoPath);
+    squareTwo.style.fill = 'blue'; // Choose your color
+    svg.appendChild(squareTwo);
+}
+
+function fill_xp_graph(data) {
     let cumulativeSum = 0;
     const transactions = data.transaction
         .map(t => ({ ...t, createdAt: new Date(t.createdAt).getTime() })) // Convert createdAt to timestamp
@@ -86,9 +202,7 @@ function fill_graph(data) {
             x: t.createdAt,
             y: (cumulativeSum += +t.amount) // Ensure amount is a number and accumulate the sum
         }));
-    
-    console.log(transactions);
-    console.log(transactions);
+
 
     // Scaling functions remain the same
     const minX = Math.min(...transactions.map(t => t.x));
@@ -99,7 +213,7 @@ function fill_graph(data) {
     const scaleY = y => 400 - (y - minY) / (maxY - minY) * 400;
 
     // Draw lines for cumulative values
-    const svg = document.getElementById('graph');
+    const svg = document.getElementById('graph1');
     let pathD = `M ${scaleX(transactions[0].x)} ${scaleY(transactions[0].y)}`; // Move to the first point
 
     for (let i = 1; i < transactions.length; i++) {
@@ -126,5 +240,5 @@ function fill_graph(data) {
     let totalXP = transactions[transactions.length - 1].y; // Assuming the last transaction contains the total sum
     // Update the text element for total XP
     document.querySelector('#graph .total-xp').textContent = `Total XP: ${totalXP}`;
-
+    return totalXP;
 }

@@ -5,13 +5,6 @@ body {
     padding: 0 20px 0 25px;
 }
 
-.graph-container {
-    height: 600px;
-    width: 680px;
-    padding: 25px;
-
-}
-
 /* Class for glowing text effect */
 .glow {
     text-shadow: 
@@ -121,7 +114,7 @@ body {
         }
     }
 
-    #graph path {
+    .graph path {
         animation: pulsate 2s infinite ease-in-out;
     }
 
@@ -141,18 +134,18 @@ body {
 
 /* SVG GRAPH STYLES*/
 
-#graph {
+.graph {
     border: 1px solid #0f0;
 }
 
 /* Add grid lines style */
-#graph line.grid-line {
+.graph line.grid-line {
     stroke: #333;
     stroke-width: 0.5;
 }
 
 /* Style for the SVG line to make it glow */
-#graph path {
+.graph path {
     stroke: url(#glow-gradient); /* Use the gradient for stroke */
     stroke-width: 2;
     fill: none;
@@ -160,7 +153,7 @@ body {
 }
 
 /* Style for the glowing dots on the graph line */
-#graph circle {
+.graph circle {
     fill: #0f0;
     stroke: #0f0;
     stroke-width: 1;
@@ -168,26 +161,26 @@ body {
 }
 
 /* Style for the text labels on the axes */
-#graph text {
+.graph text {
     fill: #0f0;
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px;
 }
 
 /* Grid lines style */
-#graph .grid-line {
+.graph .grid-line {
     stroke: #0f0;
 }
 
 /* Text style for total XP */
-#graph .total-xp {
+.graph .total-xp {
     fill: #0f0;
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px;
     alignment-baseline: central;
 }
 
-#graph-line {
+.graph-line {
     stroke-dasharray: var(--path-length);
     stroke-dashoffset: var(--path-length);
   }
@@ -200,3 +193,23 @@ body {
       stroke-dasharray: 0;
     }
   }
+
+  .graphs-wrapper {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: wrap; /* Allow items to wrap as needed */
+    justify-content: center;
+    align-items: flex-start; /* Align to the top */
+    gap: 20px;
+}
+.graph-container {
+    flex: 1 1 auto; /* Allow flex items to grow and shrink */
+    max-width: calc(50% - 10px); /* Set max-width to control wrapping */
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+/* Remove the margin-left style from the h2 elements */
+#graph-title, #graph-title2 {
+    margin-left: 0;
+}
