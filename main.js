@@ -143,11 +143,11 @@ async function get_audit_ratio() {
         });
         const data = await response.json();
         // Assuming the data contains the user object and that it's an array
-        if (data && data.data && data.data.user && data.data.user.length > 0) {
+        if (data && data.data && data.data.transaction[0] && data.data.transaction[0].user.auditRatio > 0) {
             const auditRatio = data.data.transaction[0].user.auditRatio; // Getting the first user's auditRatio
-            return auditRatio; // Return the ID
+            return auditRatio; // Return the Ratio
         } else {
-            console.error('No user ID found');
+            console.error(`Wrong request sequence, data: ${JSON.stringify(data.data.transaction[0])}`);
             return null; // Return null or throw an error as appropriate
         }
     } catch (error) {
@@ -158,39 +158,85 @@ async function get_audit_ratio() {
 
 async function drawAuditRatioGraph() {
     const auditRatio = await get_audit_ratio(); // Get the audit ratio
-    const maxHeight = 400; // Maximum height for the square representing 1
-    let firstSquareHeight = maxHeight; // Height for the square representing 1
+    console.log(auditRatio);
+    const maxHeight = 350; // Maximum height for the tallest square
+    const spaceFromTop = 50; // Space to leave from the top of the SVG
 
-    // If the audit ratio is larger than 1, scale down the first square
-    if (auditRatio > 1) {
-        firstSquareHeight = maxHeight / auditRatio;
+    // Calculate the height of the first square representing '1'
+    let firstSquareHeight = maxHeight; 
+    if (auditRatio < 1) {
+        firstSquareHeight = maxHeight * auditRatio; // If the ratio is less than 1, scale down the first square
     }
 
-    const secondSquareHeight = auditRatio * maxHeight; // Height for the audit_ratio square
+    // Calculate the height of the second square based on the audit ratio
+    let secondSquareHeight = maxHeight * auditRatio;
+    if (secondSquareHeight + spaceFromTop > 400) {
+        // If the second square exceeds the SVG height, scale both down proportionally
+        secondSquareHeight = 400 - spaceFromTop;
+        firstSquareHeight = secondSquareHeight / auditRatio;
+    }
 
-    // Assume gap is the space you want between squares
-    const gap = 20;
-
-    // Recalculate the x positions to include the gap
-    const firstSquareX = 50; // Starting x for the first square
-    const firstSquareWidth = 100; // The width of the first square
-
+    const gap = 50; // Gap between squares
+    const firstSquareX = 25; // Starting x for the first square
+    const firstSquareWidth = 250; // The width of the first square
     const secondSquareX = firstSquareX + firstSquareWidth + gap; // Starting x for the second square
 
-    const squareOnePath = `M ${firstSquareX} 400 H ${firstSquareX + firstSquareWidth} V ${400 - firstSquareHeight} H ${firstSquareX} Z`;
-    const squareTwoPath = `M ${secondSquareX} 400 H ${secondSquareX + firstSquareWidth} V ${400 - secondSquareHeight} H ${secondSquareX} Z`;
-    
-    // Add these paths to your SVG
+    // Define the y position for the top of the squares
+    const firstSquareY = 400 - firstSquareHeight;
+    const secondSquareY = 400 - secondSquareHeight;
+
+    // Add these rectangles to your SVG
     const svg = document.getElementById('graph2');
-    const squareOne = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    squareOne.setAttribute('d', squareOnePath);
-    squareOne.style.fill = 'red'; // Choose your color
+    
+    // First rectangle representing '1'
+    const squareOne = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    squareOne.setAttribute('x', firstSquareX);
+    squareOne.setAttribute('y', firstSquareY);
+    squareOne.setAttribute('width', firstSquareWidth);
+    squareOne.setAttribute('height', firstSquareHeight);
+    squareOne.style.fill = '#F050F0'; // Choose your color
     svg.appendChild(squareOne);
 
-    const squareTwo = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    squareTwo.setAttribute('d', squareTwoPath);
-    squareTwo.style.fill = 'blue'; // Choose your color
+    // Second rectangle representing auditRatio
+    const squareTwo = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    squareTwo.setAttribute('x', secondSquareX);
+    squareTwo.setAttribute('y', secondSquareY);
+    squareTwo.setAttribute('width', firstSquareWidth);
+    squareTwo.setAttribute('height', secondSquareHeight);
+    squareTwo.style.fill = '#50F0F0'; // Choose your color
     svg.appendChild(squareTwo);
+
+    // Create text label for the first rectangle
+    const labelOne = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelOne.setAttribute('x', firstSquareX + firstSquareWidth / 2);
+    labelOne.setAttribute('y', firstSquareY - 10); // Position above the square
+    labelOne.setAttribute('text-anchor', 'middle');
+    labelOne.textContent = '1';
+    svg.appendChild(labelOne);
+
+    // Create text label for the second rectangle
+    const labelTwo = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelTwo.setAttribute('x', secondSquareX + firstSquareWidth / 2);
+    labelTwo.setAttribute('y', secondSquareY - 10); // Position above the square
+    labelTwo.setAttribute('text-anchor', 'middle');
+    labelTwo.textContent = auditRatio.toFixed(2); // Format the audit ratio to two decimal places
+    svg.appendChild(labelTwo);
+
+    const recievedAuditLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    recievedAuditLabel.setAttribute('x', firstSquareX + firstSquareWidth / 2);
+    recievedAuditLabel.setAttribute('y', firstSquareY + firstSquareHeight - 16); // Near the bottom of the first rectangle
+    recievedAuditLabel.setAttribute('class', 'label-text');
+    recievedAuditLabel.setAttribute('text-anchor', 'middle');
+    recievedAuditLabel.textContent = 'Received';
+    svg.appendChild(recievedAuditLabel);
+
+    const givenAuditLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    givenAuditLabel.setAttribute('x', secondSquareX + firstSquareWidth / 2);
+    givenAuditLabel.setAttribute('y', secondSquareY + secondSquareHeight - 16); // Near the bottom of the second rectangle
+    givenAuditLabel.setAttribute('class', 'label-text');
+    givenAuditLabel.setAttribute('text-anchor', 'middle');
+    givenAuditLabel.textContent = 'Given';
+    svg.appendChild(givenAuditLabel);
 }
 
 function fill_xp_graph(data) {
@@ -202,8 +248,7 @@ function fill_xp_graph(data) {
             x: t.createdAt,
             y: (cumulativeSum += +t.amount) // Ensure amount is a number and accumulate the sum
         }));
-
-
+    
     // Scaling functions remain the same
     const minX = Math.min(...transactions.map(t => t.x));
     const maxX = Math.max(...transactions.map(t => t.x));
@@ -238,7 +283,74 @@ function fill_xp_graph(data) {
     path.style.animation = 'draw-line 5s ease forwards'; 
 
     let totalXP = transactions[transactions.length - 1].y; // Assuming the last transaction contains the total sum
-    // Update the text element for total XP
-    document.querySelector('#graph .total-xp').textContent = `Total XP: ${totalXP}`;
+    const firstTransactionDate = new Date(transactions[0].x);
+    const lastTransactionDate = new Date(transactions[transactions.length - 1].x);
+
+    draw_section_descriptions(firstTransactionDate, lastTransactionDate, totalXP);
+
+    console.log(totalXP);
     return totalXP;
+}
+
+function draw_section_descriptions(firstTransactionDate, lastTransactionDate, totalXP) {
+    const svg = document.getElementById('graph1');
+    const months = generateMonthYearArray(firstTransactionDate, lastTransactionDate); // Assume this function returns the array correctly
+    const monthPositions = [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600]; // X positions for each month
+
+    // Drawing month labels
+    months.forEach((month, index) => {
+        const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textElement.setAttribute('x', monthPositions[index]);
+        textElement.setAttribute('y', 390); // Adjust based on your SVG layout
+        textElement.textContent = month;
+        textElement.setAttribute('class', 'axis-text'); // Adjust if you have a specific class for styling
+        textElement.setAttribute('class', 'glow'); // Adjust if you have a specific class for styling
+        svg.appendChild(textElement);
+    });
+
+    // Calculate and draw XP steps
+    const xpStepValue = totalXP / 8; // Calculate step value
+    // Adjusted Y positions for each XP step to align with the grid lines
+    const yPos = [365, 315, 265, 215, 165, 115, 65, 15]; // Y positions for XP steps
+
+    yPos.forEach((y, index) => {
+        const xpValue = Math.round(xpStepValue * (index + 1)); // Start from the first step value, not 0
+        const xpTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        xpTextElement.setAttribute('x', 10); // Adjust X position based on your layout to avoid overlap
+        xpTextElement.setAttribute('y', y); // Set Y position from yPos array
+        
+        xpTextElement.textContent = xpValue.toLocaleString(); // Format number with commas
+        
+        // Make the '0' text element invisible
+        if (xpValue === 0) {
+            xpTextElement.style.visibility = 'hidden';
+        }
+        xpTextElement.setAttribute('class', 'xp-appear axis-text');
+        xpTextElement.style.animationDelay = `${index * 0.2}s`;
+        svg.appendChild(xpTextElement);
+    });
+}
+
+function generateMonthYearArray(firstDate, lastDate) {
+    let dates = [];
+    const startDate = new Date(firstDate);
+    const endDate = new Date(lastDate);
+
+    // Calculate the total number of months between the start and end dates
+    const totalMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+
+    // Calculate the step size to evenly distribute the dates. We want 12 intervals for 13 elements.
+    const step = totalMonths / 12;
+
+    let currentStep = 0; // Initialize current step
+    for (let i = 0; i < 12; i++) { // Generate 12 intermediate steps
+        const currentDate = new Date(startDate.getFullYear(), startDate.getMonth() + currentStep, startDate.getDate());
+        dates.push(currentDate.toLocaleString('en-US', { month: 'short', year: '2-digit' }));
+        currentStep = Math.round((i + 1) * step); // Update current step based on the interval
+    }
+
+    // Add the last date explicitly to ensure it's included
+    dates.push(endDate.toLocaleString('en-US', { month: 'short', year: '2-digit' }));
+
+    return dates;
 }
