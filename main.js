@@ -2,6 +2,13 @@ const url = 'https://01.kood.tech/api/graphql-engine/v1/graphql';
 const signup_url = 'https://01.kood.tech/api/auth/signin';
 var jwtToken
 
+var userInfo = {
+    username: "InitialUser",
+    totalXP: 0,
+    auditRatio: 0.0
+};
+
+var infoDiv;
 
 document.getElementById('login-form').addEventListener('submit', function(e) {
     e.preventDefault(); // Prevent the form from submitting immediately
@@ -13,6 +20,8 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 
     update_token(credentials);
     
+    displayUserInfo();
+    updateUserInfo('username', username);
 
     // Add the 'shutdown' class to trigger the animation
     document.getElementById('login-container').classList.add('shutdown');
@@ -36,16 +45,26 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
                         body: JSON.stringify({
                             query: `
                             {
-                                transaction (where: {userId: {_eq: ${userId}}}) {
-                                amount
-                                createdAt
+                                transaction(where: {
+                                    userId: {_eq: ${userId}},
+                                    path: {_like: "/johvi/div-01/%"},
+                                    type: {_like: "xp"},
+                                    _not: {
+                                        _or: [
+                                            {path: {_like: "/johvi/div-01/piscine%"}},
+                                            {path: {_like: "/johvi/div-01/%/%"}},
+                                        ]
+                                    }
+                                }) {
+                                    amount
+                                    createdAt
                                 }
                             }`
                         })
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.log(fill_xp_graph(data.data));
+                        updateUserInfo('totalXP', Math.floor(fill_xp_graph(data.data)/1024)); 
                     })
                     .catch(error => console.error('Error:', error));
                 } else {
@@ -72,6 +91,36 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     }, 1000); 
 });
 
+function displayUserInfo() {
+    if (!infoDiv) {
+        infoDiv = document.createElement('div'); // Create the div if it doesn't exist
+        infoDiv.id = 'userInfoDiv'; // Assign an ID for potential styling or later reference
+    }
+
+    // Format the innerHTML with user information
+    infoDiv.innerHTML = `Name: ${userInfo.username} &nbsp;&nbsp; XP Amount: ${userInfo.totalXP.toLocaleString()}kB &nbsp;&nbsp; Audit Ratio: ${userInfo.auditRatio.toFixed(2)}`;
+
+    // Find the 'welcomeLabel' element
+    const welcomeLabel = document.getElementById('welcomeLabel');
+
+    if (welcomeLabel) {
+        // If the welcome label exists, insert the info div right after it
+        welcomeLabel.parentNode.insertBefore(infoDiv, welcomeLabel.nextSibling);
+    } else {
+        // If the welcome label isn't found, add the info at the top of the body
+        document.body.insertBefore(infoDiv, document.body.firstChild);
+    }
+}
+
+function updateUserInfo(attributeName, newValue) {
+    if (attributeName in userInfo) {
+        userInfo[attributeName] = newValue; // Update the attribute
+        displayUserInfo(); // Refresh the display to show updated information
+        console.log(`Updated ${attributeName} to ${newValue}.`);
+    } else {
+        console.error(`Attribute '${attributeName}' not found.`);
+    }
+}
 
 /* FETCH PASSING BASE64 CREDENTIALS AND GETTING TOKEN */
 function update_token(credentials) {
@@ -158,6 +207,7 @@ async function get_audit_ratio() {
 
 async function drawAuditRatioGraph() {
     const auditRatio = await get_audit_ratio(); // Get the audit ratio
+    updateUserInfo('auditRatio', auditRatio);  
     console.log(auditRatio);
     const maxHeight = 350; // Maximum height for the tallest square
     const spaceFromTop = 50; // Space to leave from the top of the SVG
