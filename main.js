@@ -10,6 +10,14 @@ var userInfo = {
 
 var infoDiv;
 
+
+document.getElementById('logout-button').addEventListener('click', function() {
+    jwtToken = null; // Reset the token
+    document.getElementById('userInfoDiv').remove(); // Remove user info display
+    alert('You have been logged out.');
+    location.reload();
+});
+
 document.getElementById('login-form').addEventListener('submit', function(e) {
     e.preventDefault(); // Prevent the form from submitting immediately
 
@@ -20,7 +28,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 
     update_token(credentials);
     
-    displayUserInfo();
+    
     updateUserInfo('username', username);
 
     // Add the 'shutdown' class to trigger the animation
@@ -75,13 +83,13 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
             });
 
             drawAuditRatioGraph();
-
         }else{
             const element = document.getElementsByClassName("loading")[0]
             for (let node of element.childNodes) {
                 // Check if the node is a text node
                 if (node.nodeType === Node.TEXT_NODE) {
-                    node.nodeValue = 'Try again. Awaiting connection'; // Replace with your new text
+                    node.nodeValue = 'Incorrect username or password. Awaiting connection'; // Replace with your new text
+                    hideUserInfo();
                     break; // Remove this line if you want to change all text nodes
                 }
             }
@@ -90,6 +98,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 
     }, 1000); 
 });
+
 
 function displayUserInfo() {
     if (!infoDiv) {
@@ -112,10 +121,16 @@ function displayUserInfo() {
     }
 }
 
+function hideUserInfo() {
+    const userInfoDiv = document.getElementById('userInfoDiv');
+    if (userInfoDiv) {
+        userInfoDiv.remove(); // Remove the div from the DOM
+    }
+}
+
 function updateUserInfo(attributeName, newValue) {
     if (attributeName in userInfo) {
         userInfo[attributeName] = newValue; // Update the attribute
-        displayUserInfo(); // Refresh the display to show updated information
         console.log(`Updated ${attributeName} to ${newValue}.`);
     } else {
         console.error(`Attribute '${attributeName}' not found.`);
@@ -208,6 +223,7 @@ async function get_audit_ratio() {
 async function drawAuditRatioGraph() {
     const auditRatio = await get_audit_ratio(); // Get the audit ratio
     updateUserInfo('auditRatio', auditRatio);  
+    displayUserInfo();
     console.log(auditRatio);
     const maxHeight = 350; // Maximum height for the tallest square
     const spaceFromTop = 50; // Space to leave from the top of the SVG

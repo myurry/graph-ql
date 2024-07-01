@@ -5,6 +5,28 @@ body {
     padding: 0 20px 0 25px;
 }
 
+.fixed-logout {
+    position: fixed; /* Fix position relative to the viewport */
+    top: 10px; /* Distance from the top */
+    right: 10px; /* Distance from the right */
+    padding: 10px 20px;
+    border: 1px solid #0f0;
+    background-color: #000;
+    color: #0f0;
+    text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.fixed-logout:hover {
+    background-color: #012; /* Darker background on hover */
+    box-shadow: 0 0 10px #0f0, 0 0 20px #0f0; /* Glowing effect on hover */
+}
+
+.fixed-logout:focus {
+    outline: none; /* Removes the outline on focus for aesthetics */
+}
+
 /* Class for glowing text effect */
 .glow {
     text-shadow: 
